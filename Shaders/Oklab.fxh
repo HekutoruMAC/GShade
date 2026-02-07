@@ -92,7 +92,7 @@ namespace Oklab
 	#if BUFFER_COLOR_SPACE > 1
 		static const bool IS_HDR = true;
 		#ifndef HDR_PAPER_WHITE_NITS
-			#define HDR_PAPER_WHITE_NITS 200
+			#define HDR_PAPER_WHITE_NITS 200.0
 		#endif
 	#else
 		static const bool IS_HDR = false;
@@ -109,7 +109,7 @@ namespace Oklab
 	//Invnorm factor
 	#if BUFFER_COLOR_SPACE == 2     //scRGB
 		#ifndef HDR_PEAK_LUMINANCE_NITS
-			#define HDR_PEAK_LUMINANCE_NITS 1000
+			#define HDR_PEAK_LUMINANCE_NITS 1000.0
 		#endif
 		static const float INVNORM_FACTOR = float(HDR_PEAK_LUMINANCE_NITS) / SDR_WHITEPOINT;
 	#elif BUFFER_COLOR_SPACE == 3   //HDR10 ST2084
