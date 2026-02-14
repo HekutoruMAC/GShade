@@ -127,12 +127,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 	float3 PQToLinear(float3 x)
 	{
-	    const float3 num = max(pow(max(x, 0.0), 1.0 / PQ_m2) - PQ_c1, 0.0);
-	    const float3 den = PQ_c2 - PQ_c3 * pow(x, 1.0 / PQ_m2);
+	    const float3 xpow = pow(max(x, 0.0), 1.0 / PQ_m2);
+	    const float3 num = max(xpow - PQ_c1, 0.0);
+	    const float3 den = max(PQ_c2 - PQ_c3 * xpow, 1e-10);
 	    
 	    const float scalingFactor = 20375.99 * pow(PeakBrightness, -0.995);
-    
-    	return pow(num / den, 1.0 / PQ_m1) * scalingFactor;
+	    
+	    return pow(num / den, 1.0 / PQ_m1) * scalingFactor;
 	}
 	
 	float3 Reinhard(float3 x)
@@ -156,11 +157,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	float3 LinearToPQ(float3 x)
 	{
 	    const float S = 0.003789 * PeakBrightness;
-		const float3 x_scaled = x * S;
-		const float3 Y = clamp(x_scaled / 80.0, 0.0, 1.0);
+	    const float3 x_scaled = x * S;
+	    const float3 Y = clamp(x_scaled / 80.0, 0.0, 1.0);
 	    
-	    const float3 num = PQ_c1 + PQ_c2 * pow(Y, PQ_m1);
-	    const float3 den = 1.0 + PQ_c3 * pow(Y, PQ_m1);
+	    const float3 Ym1 = pow(Y, PQ_m1);
+	    const float3 num = PQ_c1 + PQ_c2 * Ym1;
+	    const float3 den = 1.0 + PQ_c3 * Ym1;
 	    
 	    return pow(num / den, PQ_m2);
 	}
