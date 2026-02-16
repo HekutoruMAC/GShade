@@ -27,9 +27,17 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
-#define P_OKLAB_VERSION_REQUIRE 100
+#define P_OKLAB_VERSION_REQUIRE 104
 #include "ReShade.fxh"
 #include "Oklab.fxh"
+
+
+static const float PI = pUtils::PI;
+static const float HDR_PAPER_WHITE = Oklab::HDR_PAPER_WHITE;
+static const int BAYER[2 * 2] = {
+	0, 2,
+	3, 1
+};
 
 //Clamp invnorm factor to prevent fp precision errors
 #ifndef _POSTERIZE_MAX_INVNORM_FACTOR
@@ -91,32 +99,25 @@ uniform bool UseApproximateTransforms <
 > = false;
 
 
-//2x2 Bayer
-static const int bayer[2 * 2] = {
-	0, 2,
-	3, 1
-};
-
 float3 PosterizeDitherPass(float4 vpos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
-	static const float PI = 3.1415927;
-
 	static const float INVNORM_FACTOR = min(Oklab::INVNORM_FACTOR, _POSTERIZE_MAX_INVNORM_FACTOR);
-	static const float HDR_PAPER_WHITE = Oklab::HDR_PAPER_WHITE;
+	static const float PW_COMPENSATION = 2.2 - HDR_PAPER_WHITE / INVNORM_FACTOR;
+	static const float PALETTE_CONTROL = PW_COMPENSATION * PaletteBalance;
 
 	static const float3 BaseColor = Oklab::RGB_to_LCh(BaseColor);
+
+	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
 	color = (UseApproximateTransforms)
 		? Oklab::Fast_DisplayFormat_to_LCh(color)
 		: Oklab::DisplayFormat_to_LCh(color);
-
 
 	//Dithering
 	float m;
 	if (DitheringFactor != 0.0)
 	{
 		int2 xy = int2(texcoord * ReShade::ScreenSize) % 2;
-		m = (bayer[xy.x + 2 * xy.y] * 0.25 - 0.5) * INVNORM_FACTOR * DitheringFactor;
+		m = (BAYER[xy.x + 2 * xy.y] * 0.25 - 0.5) * INVNORM_FACTOR * DitheringFactor;
 	}
 	else
 	{
@@ -124,12 +125,11 @@ float3 PosterizeDitherPass(float4 vpos : SV_Position, float2 texcoord : TexCoord
 	}
 
 	float luminance = color.r + m;
-	float adapted_luminance = (Oklab::IS_HDR) ? min(2.0 * luminance / HDR_PAPER_WHITE, 1.0) : luminance;
-	static const float PW_COMPENSATION = 2.2 - HDR_PAPER_WHITE / INVNORM_FACTOR;
-	static const float PALETTE_CONTROL = PW_COMPENSATION * PaletteBalance;
+	float adapted_luminance = (Oklab::IS_HDR) ? Oklab::get_Adapted_Luminance(luminance, 1.0) : luminance;
+
+	//Palette type
 	float hue_range;
 	float hue_offset = 0.0;
-	
 	switch (PaletteType)
 	{
 		case 0: //Monochrome
@@ -160,6 +160,7 @@ float3 PosterizeDitherPass(float4 vpos : SV_Position, float2 texcoord : TexCoord
 		} break;
 	}
 
+	//Posterization
 	color.r = ceil(luminance * NumColors) / NumColors;
 	color.g = (DesaturateHighlights)
 		? BaseColor.g * (1.0 - (adapted_luminance * adapted_luminance) * DesaturateFactor)

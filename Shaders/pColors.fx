@@ -31,7 +31,9 @@
 #include "ReShade.fxh"
 #include "Oklab.fxh"
 
+
 static const float PI = pUtils::PI;
+static const float INVNORM_FACTOR = Oklab::INVNORM_FACTOR;
 
 //White balance
 uniform float WBTemperature <
@@ -377,7 +379,7 @@ uniform bool UseApproximateTransforms <
 > = false;
 
 
-
+//Functions
 float get_Weight(float v, float t, float s) //value, threshold, curve slope
 {
 	v = (v - t) * s;
@@ -390,9 +392,7 @@ float get_Weight(float v, float t, float s) //value, threshold, curve slope
 
 float3 Apply_LUT(float3 c) //Adapted from LUT.fx by Marty McFly
 {
-	static const float EXPANSION_FACTOR = Oklab::INVNORM_FACTOR;
-	float3 LUT_coord = c / EXPANSION_FACTOR / LUT_WhitePoint;
-
+	float3 LUT_coord = c / INVNORM_FACTOR / LUT_WhitePoint;
 	float bounds = max(LUT_coord.x, max(LUT_coord.y, LUT_coord.z));
 	
 	if (bounds <= 1.0) //Only apply LUT if value is in LUT range
@@ -413,7 +413,7 @@ float3 Apply_LUT(float3 c) //Adapted from LUT.fx by Marty McFly
 			c = lerp(c, oc, 10.0 * (bounds - 0.9));
 		}
 
-		return c * LUT_WhitePoint * EXPANSION_FACTOR;
+		return c * LUT_WhitePoint * INVNORM_FACTOR;
 	}
 
 	return c;
@@ -434,11 +434,10 @@ float3 Manipulate_By_Hue(float3 color, float3 hue, float hue_shift, float hue_sa
 }
 
 
-
+//Passes
 float3 ColorsPass(float4 vpos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
 	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
-
 	color = (UseApproximateTransforms)
 		? Oklab::Fast_DisplayFormat_to_Linear(color)
 		: Oklab::DisplayFormat_to_Linear(color);
@@ -462,7 +461,7 @@ float3 ColorsPass(float4 vpos : SV_Position, float2 texcoord : TexCoord) : SV_Ta
 	color.gb *= (1.0 + GlobalSaturation);
 
 
-	////Advanced color correction - Adjustments by hue
+	//Advanced color correction - Adjustments by hue
 	#if ENABLE_ADVANCED_COLOR_CORRECTION == 1
 		color = Oklab::Oklab_to_LCh(color);
 
@@ -503,7 +502,7 @@ float3 ColorsPass(float4 vpos : SV_Position, float2 texcoord : TexCoord) : SV_Ta
 	static const float3 HighlightTintColor = Oklab::RGB_to_Oklab(HighlightTintColor) * (1 + GlobalSaturation);
 	static const float HighlightTintColorC = Oklab::get_Oklab_Chromacity(HighlightTintColor);
 
-	////Shadows-midtones-highlights
+	//Shadows-midtones-highlights
 	//Shadows
 	float shadow_weight = get_Weight(adapted_luminance, ShadowThreshold, -ShadowCurveSlope);
 	if (shadow_weight != 0.0)
@@ -531,7 +530,7 @@ float3 ColorsPass(float4 vpos : SV_Position, float2 texcoord : TexCoord) : SV_Ta
 	color = Oklab::Oklab_to_RGB(color);
 
 
-	////LUT
+	//LUT
 	if (EnableLUT)
 	{
 		color = Apply_LUT(Oklab::Saturate_RGB(color));
