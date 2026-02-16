@@ -99,19 +99,27 @@ void SlitScan(float4 pos : SV_Position, float2 texcoord : TEXCOORD0, out float4 
         case 0:
         case 1:
             if(texcoord.x >= slice_to_fill - pix_w && texcoord.x <= slice_to_fill + pix_w)
+            {
                 col_to_write.rgba = col_pixels.rgba;
+            }
             else
+            {
+                color = 0.0;
                 discard;
+            }
             break;
         case 2:
         case 3:
-            if(texcoord.y >= slice_to_fill - pix_w && texcoord.y <= slice_to_fill + pix_w){
-
-                    col_to_write.rgba = col_pixels.rgba;
+            if(texcoord.y >= slice_to_fill - pix_w && texcoord.y <= slice_to_fill + pix_w)
+            {
+                col_to_write.rgba = col_pixels.rgba;
 
             }
             else
+            {
+                color = 0.0;
                 discard;
+            }
             break;
     }
 

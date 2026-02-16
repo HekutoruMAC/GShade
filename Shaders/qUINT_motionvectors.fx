@@ -353,7 +353,11 @@ float4 motionToLgbtq(float2 motion)
 
 void PSOut(in VSOUT i, out float4 o : SV_Target0)
 {
-	if(!SHOWME) discard;
+	if(!SHOWME)
+	{
+		o = 0.0;
+		discard;
+	}
 	o = motionToLgbtq(tex2D(sMotionTexCur0, i.uv).xy);
 
 	//o = tex2D(sMotionTexCur0, i.uv).w*10-9;

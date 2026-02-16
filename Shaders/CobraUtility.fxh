@@ -421,7 +421,7 @@
         f.y = (lab.x + 16.0) / 116.0;
         f.x = lab.y / 500.0 + f.y;
         f.z = f.y - lab.z / 200.0;
-        float3 xyz = f > pow(EPSILON, 1.0 / 3.0) ? f * f * f : (f - 16.0 / 116.0) * (116.0 / KAPPA);
+        float3 xyz = f > pow(abs(EPSILON), 1.0 / 3.0) ? f * f * f : (f - 16.0 / 116.0) * (116.0 / KAPPA);
         xyz = xyz * W_D65_XYZ;
         return xyz;
     }
@@ -625,7 +625,7 @@
     float3 linear_to_srgb(float3 c)
     {
         // return pow(saturate(c), 1.0 / 2.2);
-        return (c < 0.0031308) ? c * 12.92 : 1.055 * pow(c, (1.0 / 2.4)) - 0.055;
+        return (c < 0.0031308) ? c * 12.92 : 1.055 * pow(abs(c), (1.0 / 2.4)) - 0.055;
     }
 
     float3 scrgb_to_linear(float3 c)
@@ -648,7 +648,7 @@
         const float C1 = 3424.0 / 4096.0;
         const float C2 = 2413.0 / 4096.0 * 32.0;
         const float C3 = 2392.0 / 4096.0 * 32.0;
-        return pow(max( pow(n, 1.0 / M2) - C1, 0.0) / (C2 - C3 * pow(n, 1.0 / M2)), 1.0 / M1);
+        return pow(max( pow(abs(n), 1.0 / M2) - C1, 0.0) / (C2 - C3 * pow(abs(n), 1.0 / M2)), 1.0 / M1);
     }
 
     float3 pq_inverse_eotf(float3 l) // linear -> compressed
@@ -658,7 +658,7 @@
         const float C1 = 3424.0 / 4096.0;
         const float C2 = 2413.0 / 4096.0 * 32.0;
         const float C3 = 2392.0 / 4096.0 * 32.0;
-        return pow((C1 + C2 * pow(l, M1)) / (1.0 + C3 * pow(l, M1)), M2);
+        return pow((C1 + C2 * pow(abs(l), M1)) / (1.0 + C3 * pow(abs(l), M1)), M2);
     }
 
     float3 pq_to_linear(float3 c)
@@ -873,9 +873,9 @@
 
             // depthfilter
             const float POW_FACTOR       = 2.0;
-            const float FOCUS_RANGE      = pow(UI_FocusRangeDepth, POW_FACTOR);
-            const float FOCUS_EDGE       = pow(UI_FocusEdgeDepth, POW_FACTOR);
-            const float FOCUS_DEPTH      = pow(UI_FocusDepth, POW_FACTOR);
+            const float FOCUS_RANGE      = pow(abs(UI_FocusRangeDepth), POW_FACTOR);
+            const float FOCUS_EDGE       = pow(abs(UI_FocusEdgeDepth), POW_FACTOR);
+            const float FOCUS_DEPTH      = pow(abs(UI_FocusDepth), POW_FACTOR);
             const float FOCUS_FULL_RANGE = FOCUS_RANGE + FOCUS_EDGE;
             float3 camera_sphere         = screen_to_camera(float2(UI_SphereFocusHorizontal, UI_SphereFocusVertical),
                                                             get_z_from_uniform(FOCUS_DEPTH));

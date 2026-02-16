@@ -165,6 +165,7 @@ void WienerFilterPS(float4 vpos : SV_POSITION, float2 texcoord : TEXCOORD, out f
 	
 	if(IgnoreSky && depth >= 1)
 	{
+		fogRemoved = 0.0;
 		discard;
 	}
 

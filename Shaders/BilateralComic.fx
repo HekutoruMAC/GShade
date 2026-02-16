@@ -113,9 +113,9 @@ float3 BSplineBicubicFilter(sampler sTexture, float2 texcoord)
 float3 NormalVector(float2 texcoord)
 {
 	float3 offset = float3(BUFFER_PIXEL_SIZE, 0.0);
-	float c;
-	float4 h;
-	float4 v;
+	float c = 0.0;
+	float4 h = 0.0;
+	float4 v = 0.0;
 	if(Anisotropy == 1)
 	{
 		c = ReShade::GetLinearizedDepth(texcoord);

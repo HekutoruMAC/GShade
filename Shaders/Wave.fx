@@ -67,7 +67,7 @@ float4 Wave(float4 pos : SV_Position, float2 texcoord : TEXCOORD0) : SV_TARGET
     const float4 base = tex2D(samplerColor, texcoord);
     float4 color;
 
-    tc.x /= ar;
+    tc.x = max(tc.x, 0.000001) / ar;
 
     const float theta = radians(animate == 3 ? (anim_rate * 0.01 * anim_rate_multiplier % 360.0) : angle);
     float2 sc;

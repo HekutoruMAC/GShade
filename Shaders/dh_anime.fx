@@ -18,7 +18,7 @@
  #define DH_ANIME_RENDER_SCALE 2
 #endif
 
-#define NOISE_SIZE 512
+#define NOISE_SIZE 512.0
 #define BUFFER_SIZE int2(BUFFER_WIDTH,BUFFER_HEIGHT)
 #define getColor(c) tex2Dlod(ReShade::BackBuffer,float4(c,0.0,0.0))
 #define getColorSampler(s,c) tex2Dlod(s,float4((c).xy,0,0))
@@ -354,7 +354,7 @@ namespace DHAnime13 {
 		// shading steps
 		float stepSize = 1.0/iShadingSteps;
 		if(bDithering) {
-			int2 coordsNoise = int2(coords*BUFFER_SIZE)%NOISE_SIZE;
+			int2 coordsNoise = float2(coords*BUFFER_SIZE)%NOISE_SIZE;
 			float noise = tex2Dfetch(blueNoiseSampler,coordsNoise).r;
 
 			hsv.z = round((0.5*(noise-0.5)/iShadingSteps+hsv.z)/stepSize)/iShadingSteps;
@@ -455,7 +455,7 @@ namespace DHAnime13 {
     	float dTop = coordsInt.y-topLine*lineHeight;
     	float dBottom = bottomLine*lineHeight-coordsInt.y;
 
-    	return (dTop<=dBottom && topLine%2==0) || (dTop>=dBottom && bottomLine%2==0);    	
+    	return (dTop<=dBottom && topLine%2.0==0.0) || (dTop>=dBottom && bottomLine%2.0==0.0);    	
     }
     
     int2 getLineColumn(float2 coordsInt,float toneDotSpacing) {
@@ -490,7 +490,7 @@ namespace DHAnime13 {
     	float dTop = coordsInt.y-topLine*lineHeight;
     	float dBottom = bottomLine*lineHeight-coordsInt.y;
 
-    	bool evenLine = (dTop<=dBottom && topLine%2==0) || (dTop>=dBottom && bottomLine%2==0);
+    	bool evenLine = (dTop<=dBottom && topLine%2.0==0.0) || (dTop>=dBottom && bottomLine%2.0==0.0);
     	
     	float leftLine = floor(coordsInt.x/toneDotSpacing);
     	float rightLine = ceil(coordsInt.x/toneDotSpacing);
@@ -613,8 +613,8 @@ namespace DHAnime13 {
 				
 				int2 lc = getLineColumn(dotCenter,toneDotSpacing);
 				int yOffset = isEvenLine(coordsInt,toneDotSpacing);
-				int dotIndex = (lc.y*1.5+lc.x)%3;
-				if(bToneRotateColors) dotIndex = (dotIndex+framecount%3)%3;
+				int dotIndex = float(lc.y*1.5+lc.x)%3.0;
+				if(bToneRotateColors) dotIndex = float(dotIndex+framecount%3.0)%3.0;
 					
 				if(iToneMode==3) {
 					if(dotIndex==0) {

@@ -149,7 +149,11 @@ namespace DH_Ambient_Remove {
     }
     
     void PS_AmbientPass(float4 vpos : SV_Position, float2 coords : TexCoord, out float4 outAmbient : SV_Target0) {
-        if(!bRemoveAmbientAuto) discard;
+        if(!bRemoveAmbientAuto)
+        {
+            outAmbient = 0.0;
+            discard;
+        }
 
         float3 previous = getColorSampler(previousAmbientSampler,CENTER).rgb;
         float3 result = previous;
@@ -159,7 +163,7 @@ namespace DH_Ambient_Remove {
             result = 1.0;
             first = true;
         }
-        if(framecount%60==0) {
+        if((float)framecount%60.0==0.0) {
             result = 1.0;
         }
         
